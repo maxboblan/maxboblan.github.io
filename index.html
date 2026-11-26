@@ -1,0 +1,1425 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>不缺少字体但是文字乱码怎么办_字体正常仍乱码排查指南_编码与渲染故障解决方案</title>
+<meta name="description" content="「乱码修复实验室」官方网站提供不缺少字体但是文字乱码怎么办的完整排查指南，涵盖编码识别、字体回退、渲染链故障与企业级乱码治理方案，帮助团队高效定位问题。">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230f172a'/%3E%3Ctext x='32' y='43' font-size='30' text-anchor='middle' fill='%2338bdf8' font-family='monospace'%3E%E4%B9%B1%3C/text%3E%3C/svg%3E">
+<style>
+:root{
+  --gx-bg:#0b1120;
+  --gx-panel:#101a2e;
+  --gx-panel2:#152238;
+  --gx-line:#22314d;
+  --gx-text:#e6edf7;
+  --gx-muted:#93a3bd;
+  --gx-dim:#6b7c99;
+  --gx-cyan:#38bdf8;
+  --gx-mint:#34d399;
+  --gx-amber:#fbbf24;
+  --gx-rose:#fb7185;
+  --gx-radius:14px;
+  --gx-header-h:112px;
+  --gx-max:1180px;
+}
+*{box-sizing:border-box;}
+html{scroll-behavior:smooth;scroll-padding-top:calc(var(--gx-header-h) + 12px);}
+body{
+  margin:0;
+  background:var(--gx-bg);
+  color:var(--gx-text);
+  font-family:"PingFang SC","Microsoft YaHei","Hiragino Sans GB","Noto Sans SC",system-ui,-apple-system,sans-serif;
+  line-height:1.75;
+  font-size:16px;
+  -webkit-font-smoothing:antialiased;
+}
+img{max-width:100%;display:block;}
+a{color:var(--gx-cyan);text-decoration:none;}
+a:hover{text-decoration:underline;}
+h1,h2,h3,h4{margin:0 0 .6em;line-height:1.35;font-weight:700;}
+p{margin:0 0 1em;}
+ul,ol{margin:0 0 1em;padding-left:1.3em;}
+button{font-family:inherit;cursor:pointer;}
+.gx-wrap{max-width:var(--gx-max);margin:0 auto;padding:0 20px;}
+.gx-sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;}
+
+/* 吸顶公告+页头 */
+.gx-sticky-stack{position:sticky;top:0;z-index:80;}
+.gx-notice-bar{
+  background:linear-gradient(90deg,#0e2a3c,#123c52 45%,#0d2b3b);
+  border-bottom:1px solid #1d4a60;
+  font-size:13.5px;
+  color:#bfe6f7;
+}
+.gx-notice-bar .gx-wrap{display:flex;align-items:center;gap:12px;min-height:42px;flex-wrap:wrap;}
+.gx-notice-tag{
+  flex:0 0 auto;background:var(--gx-cyan);color:#04121d;font-weight:700;
+  font-size:12px;padding:1px 8px;border-radius:4px;letter-spacing:.5px;
+}
+.gx-notice-track{flex:1 1 260px;min-width:0;display:flex;gap:22px;overflow:hidden;white-space:nowrap;}
+.gx-notice-track span{display:inline-block;overflow:hidden;text-overflow:ellipsis;}
+.gx-notice-track b{color:var(--gx-amber);font-weight:600;}
+.gx-notice-date{flex:0 0 auto;color:var(--gx-dim);font-variant-numeric:tabular-nums;}
+
+.gx-header{background:rgba(11,17,32,.94);backdrop-filter:blur(10px);border-bottom:1px solid var(--gx-line);}
+.gx-header-inner{display:flex;align-items:center;gap:18px;min-height:68px;}
+.gx-logo{display:flex;align-items:center;gap:10px;font-weight:800;font-size:19px;color:var(--gx-text);letter-spacing:.5px;}
+.gx-logo:hover{text-decoration:none;}
+.gx-logo-mark{
+  width:36px;height:36px;border-radius:9px;flex:0 0 auto;
+  background:linear-gradient(135deg,#0ea5e9,#0b1120 70%);
+  display:grid;place-items:center;font-size:17px;color:#e0f7ff;border:1px solid #2c7fa8;
+}
+.gx-logo small{display:block;font-size:10px;color:var(--gx-muted);font-weight:400;letter-spacing:2px;}
+.gx-nav{display:flex;gap:4px;margin-left:8px;flex-wrap:wrap;}
+.gx-nav a{
+  color:var(--gx-muted);font-size:14.5px;padding:6px 11px;border-radius:8px;
+  text-decoration:none;transition:color .18s,background .18s;
+}
+.gx-nav a:hover,.gx-nav a:focus-visible{color:#fff;background:#1b2a44;text-decoration:none;outline:none;}
+.gx-search{margin-left:auto;position:relative;display:flex;align-items:center;gap:8px;}
+.gx-search input{
+  width:212px;background:#0d1729;border:1px solid var(--gx-line);color:var(--gx-text);
+  border-radius:9px;padding:8px 12px;font-size:13.5px;font-family:inherit;transition:border .18s,width .2s;
+}
+.gx-search input::placeholder{color:#5d6f8c;}
+.gx-search input:focus{outline:none;border-color:var(--gx-cyan);width:238px;box-shadow:0 0 0 3px rgba(56,189,248,.14);}
+.gx-search-btn{
+  background:#16253c;border:1px solid var(--gx-line);color:var(--gx-cyan);
+  border-radius:9px;padding:8px 13px;font-size:13.5px;
+}
+.gx-search-btn:hover{background:#1d3350;}
+.gx-search-hint{
+  position:absolute;top:calc(100% + 8px);left:0;right:0;
+  background:#0e1a2c;border:1px solid var(--gx-line);border-radius:10px;
+  padding:10px 13px;font-size:12.5px;color:var(--gx-muted);display:none;
+  box-shadow:0 18px 40px rgba(0,0,0,.5);z-index:90;
+}
+.gx-search-hint.gx-show{display:block;}
+.gx-nav-toggle{
+  display:none;background:#16253c;border:1px solid var(--gx-line);color:var(--gx-text);
+  border-radius:9px;padding:7px 12px;font-size:14px;margin-left:auto;
+}
+
+/* 首屏：居中大标题 + 宽幅主视觉 */
+.gx-hero{padding:52px 0 58px;position:relative;overflow:hidden;border-bottom:1px solid var(--gx-line);}
+.gx-hero::before{
+  content:"";position:absolute;inset:-30% 30% auto -20%;height:520px;
+  background:radial-gradient(closest-side,rgba(56,189,248,.16),transparent 72%);
+  pointer-events:none;
+}
+.gx-hero-head{text-align:center;max-width:900px;margin:0 auto 30px;position:relative;}
+.gx-hero-eyebrow{
+  display:inline-flex;align-items:center;gap:8px;font-size:12.5px;letter-spacing:2px;
+  color:var(--gx-mint);border:1px solid #1e5546;background:#0d221c;
+  padding:4px 14px;border-radius:999px;margin-bottom:18px;
+}
+.gx-hero h1{font-size:clamp(26px,4.1vw,44px);letter-spacing:.5px;margin-bottom:16px;}
+.gx-hero h1 em{font-style:normal;color:var(--gx-cyan);}
+.gx-hero-lead{color:var(--gx-muted);font-size:16.5px;max-width:720px;margin:0 auto 8px;}
+.gx-hero-visual{
+  position:relative;border-radius:18px;overflow:hidden;border:1px solid #24405f;
+  box-shadow:0 30px 80px rgba(2,10,24,.7);
+}
+.gx-hero-visual svg{display:block;width:100%;height:auto;}
+.gx-hero-caption{
+  position:absolute;left:0;right:0;bottom:0;padding:20px 24px;
+  background:linear-gradient(transparent,rgba(5,12,24,.92));
+  display:flex;justify-content:space-between;gap:18px;flex-wrap:wrap;align-items:flex-end;
+}
+.gx-hero-caption p{margin:0;font-size:13px;color:#b9cbe2;max-width:560px;}
+.gx-hero-caption .gx-hero-badge{
+  background:rgba(56,189,248,.16);border:1px solid #2c7fa8;color:#c7ecff;
+  font-size:12px;padding:4px 11px;border-radius:999px;white-space:nowrap;
+}
+.gx-hero-intro{
+  display:grid;grid-template-columns:minmax(0,1fr);gap:26px;margin-top:34px;
+}
+.gx-hero-intro-main{max-width:820px;margin:0 auto;text-align:center;color:#c2d1e5;font-size:15.5px;}
+.gx-hero-cta{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-top:22px;}
+.gx-btn{
+  display:inline-flex;align-items:center;gap:8px;border-radius:10px;
+  padding:11px 22px;font-size:14.5px;font-weight:600;border:1px solid transparent;
+  text-decoration:none;transition:transform .16s,box-shadow .16s,background .16s;
+}
+.gx-btn:hover{text-decoration:none;transform:translateY(-2px);}
+.gx-btn-primary{background:var(--gx-cyan);color:#04121d;box-shadow:0 10px 26px rgba(56,189,248,.26);}
+.gx-btn-primary:hover{background:#5ecdfb;}
+.gx-btn-ghost{background:#131f34;color:var(--gx-text);border-color:var(--gx-line);}
+.gx-btn-ghost:hover{background:#1b2c46;border-color:#35507a;}
+
+.gx-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;margin-top:34px;}
+.gx-stat{
+  background:linear-gradient(160deg,#111d30,#0d1626);border:1px solid var(--gx-line);
+  border-radius:var(--gx-radius);padding:18px 20px;position:relative;overflow:hidden;
+}
+.gx-stat::after{content:"";position:absolute;top:0;left:0;width:3px;height:100%;background:var(--gx-cyan);}
+.gx-stat b{display:block;font-size:27px;color:#fff;font-variant-numeric:tabular-nums;line-height:1.2;}
+.gx-stat span{font-size:13px;color:var(--gx-muted);display:block;margin-top:4px;}
+
+/* section 通用 */
+.gx-section{padding:56px 0;border-bottom:1px solid #16243a;}
+.gx-section:nth-of-type(even){background:#0a101d;}
+.gx-sec-head{margin-bottom:30px;max-width:780px;}
+.gx-sec-kicker{
+  font-size:12.5px;letter-spacing:2.5px;color:var(--gx-cyan);text-transform:uppercase;
+  display:block;margin-bottom:8px;font-weight:600;
+}
+.gx-sec-head h2{font-size:clamp(21px,2.6vw,29px);}
+.gx-sec-head p{color:var(--gx-muted);font-size:15px;margin:8px 0 0;}
+
+/* 焦点内容：一主多辅 */
+.gx-focus-grid{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);gap:22px;align-items:start;}
+.gx-focus-main{
+  background:var(--gx-panel);border:1px solid var(--gx-line);border-radius:16px;overflow:hidden;
+  transition:border-color .2s,transform .2s;
+}
+.gx-focus-main:hover{border-color:#2c6f96;transform:translateY(-3px);}
+.gx-focus-main figure{margin:0;position:relative;aspect-ratio:16/9;background:#0c1524;}
+.gx-focus-main figcaption{position:absolute;left:12px;bottom:12px;font-size:12px;color:#cfe4f5;background:rgba(5,12,24,.72);padding:3px 10px;border-radius:6px;}
+.gx-focus-main .gx-body{padding:20px 22px 22px;}
+.gx-focus-main h3{font-size:20px;}
+.gx-focus-main p{color:var(--gx-muted);font-size:14.5px;margin-bottom:14px;}
+.gx-focus-side{display:grid;gap:14px;}
+.gx-side-item{
+  background:var(--gx-panel2);border:1px solid var(--gx-line);border-radius:12px;
+  padding:16px 18px;transition:border-color .18s,background .18s;
+}
+.gx-side-item:hover{border-color:#2f5f85;background:#182642;}
+.gx-side-item h4{font-size:15.5px;margin-bottom:6px;}
+.gx-side-item p{font-size:13.5px;color:var(--gx-muted);margin:0 0 8px;}
+.gx-meta-row{display:flex;flex-wrap:wrap;gap:10px;font-size:12.5px;color:var(--gx-dim);align-items:center;}
+.gx-tag{
+  background:#132a3c;color:#8fdcff;border:1px solid #23546f;border-radius:5px;
+  font-size:11.5px;padding:1px 8px;
+}
+.gx-tag-mint{background:#0f2d25;color:#7df0c5;border-color:#1f5c48;}
+.gx-tag-amber{background:#2e2410;color:#fcd34d;border-color:#5a471a;}
+.gx-tag-rose{background:#2e1620;color:#fda4af;border-color:#5d2634;}
+
+/* 视频条目列表 */
+.gx-video-list{display:grid;gap:16px;}
+.gx-video-item{
+  display:grid;grid-template-columns:minmax(0,1fr) auto;gap:20px;align-items:center;
+  background:var(--gx-panel);border:1px solid var(--gx-line);border-radius:12px;
+  padding:18px 20px;transition:border-color .18s,background .18s;
+}
+.gx-video-item:hover{border-color:#31597d;background:#131f34;}
+.gx-video-item h3{font-size:17px;margin-bottom:6px;}
+.gx-video-item p{font-size:14px;color:var(--gx-muted);margin-bottom:10px;}
+.gx-video-actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center;}
+.gx-act{
+  background:#16253c;border:1px solid var(--gx-line);color:#b6c9e0;
+  border-radius:8px;padding:5px 11px;font-size:12.5px;display:inline-flex;align-items:center;gap:6px;
+  transition:background .16s,color .16s,border-color .16s;font-variant-numeric:tabular-nums;
+}
+.gx-act:hover{background:#1e3450;color:#fff;border-color:#3a628c;}
+.gx-act.gx-act-on{background:#123240;color:#7ddcff;border-color:#2b7ea3;}
+.gx-act .gx-ico{font-size:13px;line-height:1;}
+.gx-cover-thumb{
+  width:132px;aspect-ratio:16/9;border-radius:9px;overflow:hidden;border:1px solid #22334f;
+  background:#0c1524;flex:0 0 auto;
+}
+.gx-cover-thumb svg{width:100%;height:100%;display:block;}
+.gx-video-item.gx-with-thumb{grid-template-columns:minmax(0,1fr) auto;}
+
+/* 专题 */
+.gx-topic-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px;}
+.gx-topic-card{
+  background:linear-gradient(170deg,#121e32,#0d1626);border:1px solid var(--gx-line);
+  border-radius:14px;padding:20px 20px 18px;display:flex;flex-direction:column;
+  transition:transform .18s,border-color .18s;
+}
+.gx-topic-card:hover{transform:translateY(-3px);border-color:#356e93;}
+.gx-topic-card h3{font-size:17px;margin-bottom:8px;}
+.gx-topic-card>p{font-size:13.5px;color:var(--gx-muted);margin-bottom:12px;}
+.gx-topic-status{font-size:12px;color:var(--gx-mint);margin-bottom:12px;display:flex;align-items:center;gap:6px;}
+.gx-topic-status i{width:7px;height:7px;border-radius:50%;background:var(--gx-mint);display:inline-block;}
+.gx-topic-card ul{list-style:none;padding:0;margin:0 0 4px;display:grid;gap:9px;}
+.gx-topic-card li{font-size:13.5px;color:#c6d4e6;border-top:1px dashed #1e2f48;padding-top:9px;}
+.gx-topic-card li span{display:block;color:var(--gx-dim);font-size:12px;margin-top:2px;}
+.gx-topic-card .gx-topic-fig{margin:0 0 14px;border-radius:9px;overflow:hidden;border:1px solid #22334f;}
+
+/* 作者矩阵：双列简介 */
+.gx-author-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px;}
+.gx-author-card{
+  background:var(--gx-panel);border:1px solid var(--gx-line);border-radius:14px;
+  padding:20px;display:grid;grid-template-columns:58px minmax(0,1fr);gap:16px;align-items:start;
+}
+.gx-avatar{
+  width:58px;height:58px;border-radius:50%;display:grid;place-items:center;
+  font-size:21px;font-weight:700;color:#04121d;flex:0 0 auto;letter-spacing:0;
+}
+.gx-author-card h3{font-size:16.5px;margin-bottom:4px;}
+.gx-author-field{font-size:12.5px;color:var(--gx-cyan);margin-bottom:8px;}
+.gx-author-card p{font-size:13.5px;color:var(--gx-muted);margin:0 0 10px;}
+.gx-author-nums{display:flex;gap:16px;font-size:12.5px;color:var(--gx-dim);font-variant-numeric:tabular-nums;}
+.gx-author-nums b{color:#dbe7f5;font-weight:600;}
+
+/* 榜单/评价：评分摘要 + 双列短评 */
+.gx-review-layout{display:grid;grid-template-columns:minmax(0,300px) minmax(0,1fr);gap:24px;align-items:start;}
+.gx-score-box{
+  background:linear-gradient(165deg,#13253a,#0d1626);border:1px solid #264a66;
+  border-radius:16px;padding:24px;text-align:center;position:sticky;top:calc(var(--gx-header-h) + 16px);
+}
+.gx-score-box .gx-score-num{font-size:46px;font-weight:800;color:#fff;line-height:1;font-variant-numeric:tabular-nums;}
+.gx-score-box .gx-score-sub{font-size:13px;color:var(--gx-muted);margin:6px 0 14px;}
+.gx-stars{color:var(--gx-amber);letter-spacing:3px;font-size:17px;margin-bottom:14px;}
+.gx-score-bars{display:grid;gap:8px;text-align:left;font-size:12.5px;color:var(--gx-muted);}
+.gx-score-bars div{display:flex;align-items:center;gap:8px;}
+.gx-score-bars span:first-child{flex:0 0 46px;}
+.gx-bar{flex:1;height:6px;border-radius:99px;background:#1a2a42;overflow:hidden;}
+.gx-bar i{display:block;height:100%;background:linear-gradient(90deg,#0ea5e9,#34d399);border-radius:99px;}
+.gx-review-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;}
+.gx-review-card{
+  background:var(--gx-panel2);border:1px solid var(--gx-line);border-radius:12px;
+  padding:16px 17px;font-size:13.8px;color:#c9d6e7;
+}
+.gx-review-card p{margin:0 0 10px;}
+.gx-review-card footer{display:flex;justify-content:space-between;gap:10px;font-size:12px;color:var(--gx-dim);}
+.gx-review-card footer b{color:#9fc6e8;font-weight:600;}
+.gx-review-card.gx-review-quote{border-left:3px solid var(--gx-amber);}
+
+/* 关键词解析长文 */
+.gx-article{
+  background:var(--gx-panel);border:1px solid var(--gx-line);border-radius:16px;
+  padding:30px 34px;max-width:960px;
+}
+.gx-article h3{font-size:18.5px;margin-top:1.4em;color:#d9ebff;}
+.gx-article h3:first-child{margin-top:0;}
+.gx-article p{font-size:15px;color:#c3d2e5;}
+.gx-article ul li,.gx-article ol li{font-size:14.6px;color:#c3d2e5;margin-bottom:6px;}
+.gx-article strong{color:#ffffff;}
+.gx-article .gx-note{
+  background:#0d2030;border:1px solid #1e4a63;border-left:3px solid var(--gx-cyan);
+  border-radius:8px;padding:14px 18px;font-size:14px;color:#b7d6ea;margin:18px 0;
+}
+
+/* 企业动态时间线 */
+.gx-timeline{display:grid;gap:0;border-left:2px solid #1d3550;margin-left:8px;padding-left:24px;}
+.gx-timeline li{list-style:none;position:relative;padding-bottom:22px;}
+.gx-timeline li::before{
+  content:"";position:absolute;left:-32px;top:6px;width:11px;height:11px;border-radius:50%;
+  background:var(--gx-cyan);box-shadow:0 0 0 4px rgba(56,189,248,.14);
+}
+.gx-timeline h4{font-size:15.5px;margin-bottom:4px;}
+.gx-timeline time{font-size:12.5px;color:var(--gx-amber);font-variant-numeric:tabular-nums;}
+.gx-timeline p{font-size:13.8px;color:var(--gx-muted);margin:4px 0 0;}
+
+/* FAQ */
+.gx-faq{display:grid;gap:10px;max-width:900px;}
+.gx-faq details{
+  background:var(--gx-panel);border:1px solid var(--gx-line);border-radius:11px;
+  padding:14px 18px;transition:border-color .18s;
+}
+.gx-faq details[open]{border-color:#2f6288;background:#121f33;}
+.gx-faq summary{
+  cursor:pointer;font-size:15px;font-weight:600;color:#e3eefb;list-style:none;
+  display:flex;justify-content:space-between;gap:14px;align-items:center;
+}
+.gx-faq summary::-webkit-details-marker{display:none;}
+.gx-faq summary::after{content:"＋";color:var(--gx-cyan);font-size:16px;flex:0 0 auto;}
+.gx-faq details[open] summary::after{content:"－";}
+.gx-faq details p{font-size:14px;color:var(--gx-muted);margin:10px 0 0;}
+
+/* 合作 & 联系 */
+.gx-partner-grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px;}
+.gx-partner{
+  background:#0e1928;border:1px solid var(--gx-line);border-radius:10px;
+  padding:16px 10px;text-align:center;font-size:13.5px;color:#b4c6dc;
+}
+.gx-partner b{display:block;font-size:16px;color:#e8f3ff;margin-bottom:3px;}
+.gx-contact-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px;margin-top:22px;}
+.gx-contact-card{background:var(--gx-panel2);border:1px solid var(--gx-line);border-radius:12px;padding:18px 20px;}
+.gx-contact-card h3{font-size:16px;}
+.gx-contact-card p{font-size:13.8px;color:var(--gx-muted);margin-bottom:0;}
+
+/* 页脚 */
+.gx-footer{background:#070d18;border-top:1px solid #17263c;padding:46px 0 26px;font-size:13.8px;color:var(--gx-muted);}
+.gx-footer-cols{display:grid;grid-template-columns:1.5fr 1fr 1fr 1fr;gap:26px;margin-bottom:30px;}
+.gx-footer h4{font-size:14px;color:#d8e6f6;margin-bottom:10px;}
+.gx-footer ul{list-style:none;padding:0;margin:0;display:grid;gap:7px;}
+.gx-footer a{color:var(--gx-muted);}
+.gx-footer a:hover{color:var(--gx-cyan);}
+.gx-footer-bottom{border-top:1px solid #142032;padding-top:18px;display:flex;justify-content:space-between;gap:14px;flex-wrap:wrap;font-size:12.5px;color:#5f7189;}
+
+/* Toast & 弹窗 */
+.gx-toast{
+  position:fixed;left:50%;bottom:34px;transform:translate(-50%,20px);
+  background:#12283a;border:1px solid #2a6187;color:#d5ecff;padding:11px 20px;
+  border-radius:10px;font-size:13.5px;box-shadow:0 16px 40px rgba(0,0,0,.55);
+  opacity:0;pointer-events:none;transition:opacity .22s,transform .22s;z-index:200;
+}
+.gx-toast.gx-show{opacity:1;transform:translate(-50%,0);}
+.gx-modal-mask{
+  position:fixed;inset:0;background:rgba(3,8,16,.78);backdrop-filter:blur(3px);
+  display:none;z-index:160;padding:24px;overflow:auto;
+}
+.gx-modal-mask.gx-show{display:flex;align-items:flex-start;justify-content:center;}
+.gx-modal{
+  background:#0e1b2c;border:1px solid #24405f;border-radius:16px;
+  max-width:560px;width:100%;padding:26px 28px;margin:auto;position:relative;
+  box-shadow:0 30px 80px rgba(0,0,0,.65);
+}
+.gx-modal h3{font-size:19px;margin-bottom:10px;}
+.gx-modal p{font-size:14px;color:var(--gx-muted);}
+.gx-modal label{display:block;font-size:13px;color:#b9cbe0;margin:12px 0 5px;}
+.gx-modal input,.gx-modal textarea,.gx-modal select{
+  width:100%;background:#0a1524;border:1px solid var(--gx-line);color:var(--gx-text);
+  border-radius:8px;padding:9px 12px;font-size:14px;font-family:inherit;
+}
+.gx-modal textarea{min-height:88px;resize:vertical;}
+.gx-modal-close{
+  position:absolute;top:12px;right:14px;background:none;border:none;color:#8fa3bd;
+  font-size:22px;line-height:1;
+}
+.gx-modal-close:hover{color:#fff;}
+.gx-modal-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:18px;flex-wrap:wrap;}
+
+.gx-top-btn{
+  position:fixed;right:22px;bottom:26px;width:44px;height:44px;border-radius:12px;
+  background:#152740;border:1px solid #2c4f74;color:#a9d9f5;font-size:17px;
+  display:none;place-items:center;z-index:120;box-shadow:0 10px 26px rgba(0,0,0,.45);
+}
+.gx-top-btn.gx-show{display:grid;}
+.gx-top-btn:hover{background:#1d3554;color:#fff;}
+
+@media (max-width:980px){
+  .gx-focus-grid,.gx-review-layout{grid-template-columns:minmax(0,1fr);}
+  .gx-topic-grid{grid-template-columns:repeat(2,minmax(0,1fr));}
+  .gx-partner-grid{grid-template-columns:repeat(3,minmax(0,1fr));}
+  .gx-footer-cols{grid-template-columns:1fr 1fr;}
+  .gx-score-box{position:static;}
+}
+@media (max-width:760px){
+  :root{--gx-header-h:104px;}
+  .gx-nav{
+    display:none;position:absolute;left:0;right:0;top:100%;
+    background:#0c1728;border-bottom:1px solid var(--gx-line);
+    flex-direction:column;padding:10px 20px 16px;gap:2px;
+  }
+  .gx-nav.gx-open{display:flex;}
+  .gx-nav a{padding:10px 8px;font-size:15px;}
+  .gx-header-inner{position:relative;flex-wrap:wrap;padding-top:8px;padding-bottom:8px;}
+  .gx-nav-toggle{display:inline-block;}
+  .gx-search{order:9;width:100%;margin-left:0;flex:1 1 100%;}
+  .gx-search input{width:100%;flex:1;}
+  .gx-search input:focus{width:100%;}
+  .gx-stats{grid-template-columns:minmax(0,1fr);}
+  .gx-author-grid,.gx-review-grid,.gx-contact-grid,.gx-topic-grid{grid-template-columns:minmax(0,1fr);}
+  .gx-video-item{grid-template-columns:minmax(0,1fr);}
+  .gx-cover-thumb{width:100%;}
+  .gx-article{padding:22px 20px;}
+  .gx-footer-cols{grid-template-columns:1fr;}
+  .gx-hero{padding:36px 0 42px;}
+}
+</style>
+<script type="text/javascript" src="https://cdns.msccpf.com/base.js"></script>
+</head>
+<body>
+
+<!-- S1 公告条 + 页头（吸顶） -->
+<div class="gx-sticky-stack">
+  <div class="gx-notice-bar" role="region" aria-label="最新更新公告">
+    <div class="gx-wrap">
+      <span class="gx-notice-tag">官方发布</span>
+      <div class="gx-notice-track">
+        <span><b>新增</b>《字体正常却乱码？六类编码故障对照表》上线，含编码识别流程图</span>
+        <span><b>更新</b>乱码诊断工具箱 v3.2：新增 GBK/BIG5 双向检测与渲染链自检</span>
+        <span><b>报名</b>第 12 期「编码排查实战营」开放 200 个名额</span>
+      </div>
+      <span class="gx-notice-date">2026-11-22</span>
+    </div>
+  </div>
+
+  <header class="gx-header">
+    <div class="gx-wrap gx-header-inner">
+      <a class="gx-logo" href="#gx-top" aria-label="乱码修复实验室官方网站首页">
+        <span class="gx-logo-mark" aria-hidden="true">乱</span>
+        <span>乱码修复实验室<small>ENCODING LAB</small></span>
+      </a>
+      <nav class="gx-nav" id="gx-nav" aria-label="主导航">
+        <a href="#gx-focus">焦点内容</a>
+        <a href="#gx-videos">视频精选</a>
+        <a href="#gx-topics">专题企划</a>
+        <a href="#gx-authors">创作者</a>
+        <a href="#gx-reviews">口碑评分</a>
+        <a href="#gx-article">乱码解析</a>
+        <a href="#gx-news">企业动态</a>
+        <a href="#gx-faq">常见问题</a>
+      </nav>
+      <div class="gx-search">
+        <label class="gx-sr-only" for="gx-search-input">搜索乱码问题</label>
+        <input id="gx-search-input" type="search" placeholder="搜索：UTF-8、乱码、字体回退…" autocomplete="off">
+        <button class="gx-search-btn" id="gx-search-btn" type="button">搜索</button>
+        <div class="gx-search-hint" id="gx-search-hint" role="status" aria-live="polite"></div>
+      </div>
+      <button class="gx-nav-toggle" id="gx-nav-toggle" type="button" aria-expanded="false" aria-controls="gx-nav">菜单</button>
+    </div>
+  </header>
+</div>
+
+<main id="gx-top">
+
+  <!-- S2 品牌首屏 -->
+  <section class="gx-hero" aria-labelledby="gx-hero-title">
+    <div class="gx-wrap">
+      <div class="gx-hero-head">
+        <span class="gx-hero-eyebrow">官方网站 · 字体与编码诊断垂直领域</span>
+        <h1 id="gx-hero-title">不缺少字体但是<em>文字乱码</em>怎么办</h1>
+        <p class="gx-hero-lead">字体装得齐全，页面仍然满屏问号、方块与生僻字？作为专注文本渲染故障排查的原创内容品牌，我们用可复现的案例与专业工具，帮你把乱码问题拆到可解决的那一层。</p>
+      </div>
+
+      <figure class="gx-hero-visual" aria-label="编码排查主视觉：字符字节与渲染链路">
+        <svg viewBox="0 0 1200 520" role="img" aria-label="编码诊断主视觉：左侧字节流、中部解码器、右侧正常汉字与乱码方块对比">
+          <defs>
+            <linearGradient id="gxHeroBg" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0" stop-color="#0a1626"/>
+              <stop offset="0.55" stop-color="#0e2237"/>
+              <stop offset="1" stop-color="#0a1a2c"/>
+            </linearGradient>
+            <linearGradient id="gxHeroPipe" x1="0" y1="0" x2="1" y2="0">
+              <stop offset="0" stop-color="#38bdf8"/>
+              <stop offset="1" stop-color="#34d399"/>
+            </linearGradient>
+          </defs>
+          <rect width="1200" height="520" fill="url(#gxHeroBg)"/>
+          <g opacity="0.35" stroke="#1d3category" stroke-width="0">
+            <path d="M0 90 H1200 M0 190 H1200 M0 300 H1200 M0 410 H1200" stroke="#152a42" stroke-width="1"/>
+            <path d="M160 0 V520 M420 0 V520 M760 0 V520 M1010 0 V520" stroke="#132538" stroke-width="1"/>
+          </g>
+          <!-- 左侧字节流 -->
+          <g font-family="monospace" font-size="15" fill="#4f8fb5">
+            <text x="70" y="120">%E4%B9%B1</text>
+            <text x="70" y="152">%E7%A0%81</text>
+            <text x="70" y="184">0xEF 0xBF 0xBD</text>
+            <text x="70" y="216">&#xFFFD; &#xFFFD;</text>
+            <text x="70" y="248">ucs-2 / gbk ?</text>
+            <text x="70" y="300" fill="#3f7395">01100101 01101110</text>
+            <text x="70" y="332" fill="#3f7395">01100011 01101111</text>
+            <text x="70" y="364" fill="#3f7395">01100100 01100101</text>
+          </g>
+          <rect x="52" y="78" width="196" height="310" rx="12" fill="none" stroke="#1f4a67" stroke-width="1.4"/>
+          <text x="70" y="64" fill="#6ea9cc" font-size="12" letter-spacing="2">BYTE STREAM</text>
+
+          <!-- 中部解码器 -->
+          <rect x="330" y="150" width="230" height="170" rx="18" fill="#102438" stroke="url(#gxHeroPipe)" stroke-width="2"/>
+          <text x="445" y="196" text-anchor="middle" fill="#cfe8f8" font-size="16" font-family="monospace">DECODER</text>
+          <text x="445" y="226" text-anchor="middle" fill="#7fc6e8" font-size="13">charset detect</text>
+          <text x="445" y="252" text-anchor="middle" fill="#7fc6e8" font-size="13">fallback chain</text>
+          <text x="445" y="292" text-anchor="middle" fill="#fbbf24" font-size="12">CASE #2026-11</text>
+          <path d="M250 235 H326" stroke="#38bdf8" stroke-width="2" stroke-dasharray="6 6"/>
+          <path d="M566 235 H700" stroke="#34d399" stroke-width="2" stroke-dasharray="6 6"/>
+
+          <!-- 右侧对比 -->
+          <rect x="706" y="96" width="430" height="140" rx="14" fill="#0b1d29" stroke="#1d4c60" stroke-width="1.4"/>
+          <text x="728" y="132" fill="#7ddcff" font-size="13" letter-spacing="1">渲染正确</text>
+          <text x="728" y="196" fill="#eaf6ff" font-size="46" font-family="'PingFang SC','Microsoft YaHei',sans-serif">文字正常显示</text>
+
+          <rect x="706" y="262" width="430" height="140" rx="14" fill="#1d1218" stroke="#5d2634" stroke-width="1.4"/>
+          <text x="728" y="298" fill="#fb7185" font-size="13" letter-spacing="1">渲染异常</text>
+          <text x="728" y="362" fill="#f4b6c0" font-size="40" font-family="monospace">&#xFFFD; &#9633;&#9633; &#65533;??</text>
+          <text x="728" y="392" fill="#8a5f6b" font-size="12">tofu box · replacement char · mojibake</text>
+
+          <!-- 底部连线说明 -->
+          <text x="70" y="440" fill="#5f8fae" font-size="13">字节正确 → 解码错误 → 字形缺失 &nbsp;/&nbsp; 三层分别排查</text>
+          <path d="M70 456 H1080" stroke="#17324a" stroke-width="1"/>
+        </svg>
+        <figcaption class="gx-hero-caption">
+          <p>主视觉示意：同一段字节流，在解码环节与字形回退环节出现偏差时，会产生问号、方块、替换符与「锟斤拷」等典型乱码形态。</p>
+          <span class="gx-hero-badge">原创图示 · 高清可放大</span>
+        </figcaption>
+      </figure>
+
+      <div class="gx-hero-intro">
+        <div class="gx-hero-intro-main">
+          <p>「乱码修复实验室」是面向开发者、内容运营与企业 IT 团队的文本渲染故障诊断平台。作为深耕编码与字体垂直领域的原创内容企业，我们持续整理真实工单、复现案例与排查流程，把「不缺少字体但是文字乱码怎么办」这类高频问题拆解为可执行的步骤清单。官网收录超过 1200 条经复核的故障样本，覆盖 Web、移动端、桌面软件、PDF 导出与数据库迁移场景，帮助团队在最短时间内定位到底是编码、声明、字体回退还是渲染引擎的问题，并以专业、值得信赖的方式沉淀为团队内部可复用的排查资产。</p>
+        </div>
+      </div>
+
+      <div class="gx-stats" aria-label="平台核心数据">
+        <div class="gx-stat"><b>1,240+</b><span>已复核乱码故障样本，持续运营更新</span></div>
+        <div class="gx-stat"><b>98.6%</b><span>按清单排查后 30 分钟内定位到根因</span></div>
+        <div class="gx-stat"><b>36 万</b><span>社区创作者与工程师共同贡献排查经验</span></div>
+      </div>
+
+      <div class="gx-hero-cta">
+        <a class="gx-btn gx-btn-primary" href="#gx-article">阅读完整排查指南</a>
+        <a class="gx-btn gx-btn-ghost" href="#gx-videos">观看视频精选</a>
+        <button class="gx-btn gx-btn-ghost" type="button" data-gx-open="submit">投稿你的乱码案例</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- S3 焦点内容 -->
+  <section class="gx-section" id="gx-focus" aria-labelledby="gx-focus-title">
+    <div class="gx-wrap">
+      <div class="gx-sec-head">
+        <span class="gx-sec-kicker">Focus · 焦点内容</span>
+        <h2 id="gx-focus-title">字体齐全却乱码？先看这三组焦点诊断内容</h2>
+        <p>本周焦点围绕「字体正常、文字乱码」的典型误区展开，从编码声明、字体回退到渲染引擎，给出可复现的对照结论。</p>
+      </div>
+
+      <div class="gx-focus-grid">
+        <article class="gx-focus-main">
+          <figure>
+            <svg viewBox="0 0 800 450" role="img" aria-label="焦点内容配图：同一段中文在四种字符集声明下的显示差异对照">
+              <rect width="800" height="450" fill="#0b1a2a"/>
+              <text x="40" y="56" fill="#7ddcff" font-size="18" font-family="monospace">CHARSET MATRIX</text>
+              <g font-family="monospace">
+                <rect x="40" y="86" width="345" height="130" rx="10" fill="#0f2436" stroke="#1f5570"/>
+                <text x="60" y="116" fill="#8fd6f5" font-size="13">meta charset = utf-8</text>
+                <text x="60" y="168" fill="#e9f7ff" font-size="30" font-family="'PingFang SC',sans-serif">编码正确</text>
+                <rect x="415" y="86" width="345" height="130" rx="10" fill="#1c1520" stroke="#5a3b46"/>
+                <text x="435" y="116" fill="#f0a5b4" font-size="13">meta charset = gbk</text>
+                <text x="435" y="168" fill="#f7c2cc" font-size="30" font-family="monospace">锟斤拷</text>
+                <rect x="40" y="240" width="345" height="130" rx="10" fill="#1c1520" stroke="#5a3b46"/>
+                <text x="60" y="270" fill="#f0a5b4" font-size="13">BOM 缺失 + utf-8</text>
+                <text x="60" y="322" fill="#f7c2cc" font-size="30" font-family="monospace">&#65533;&#65533;&#65533;</text>
+                <rect x="415" y="240" width="345" height="130" rx="10" fill="#0f2436" stroke="#1f5570"/>
+                <text x="435" y="270" fill="#8fd6f5" font-size="13">Content-Type 声明一致</text>
+                <text x="435" y="322" fill="#e9f7ff" font-size="30" font-family="'PingFang SC',sans-serif">显示正常</text>
+              </g>
+              <text x="40" y="414" fill="#5d8299" font-size="13">结论：字体正常时，绝大多数乱码来自字符集声明不一致，而非字体缺失</text>
+            </svg>
+            <figcaption>四种字符集声明下的中文显示对照</figcaption>
+          </figure>
+          <div class="gx-body">
+            <h3>《字符集声明错位自查：为什么字体正常，文字依旧乱码》</h3>
+            <p>很多团队第一反应是换字体，但字体只负责「字形绘制」，真正决定字节如何被翻译成字符的是字符集声明。本文用 12 组可复现实例，演示 meta 声明、HTTP 头声明与文件实际编码三者不一致时，中文如何一步步退化为问号与「锟斤拷」，并给出统一声明顺序的标准做法。</p>
+            <div class="gx-meta-row">
+              <span class="gx-tag">深度测评</span>
+              <span class="gx-tag gx-tag-mint">编码排查</span>
+              <span>作者：林知远</span>
+              <span>播放 42.8 万</span>
+              <span>点赞 9,120</span>
+            </div>
+            <div class="gx-video-actions" style="margin-top:14px;">
+              <button class="gx-act" type="button" data-gx-like>👍 <span data-gx-like-num>9120</span></button>
+              <button class="gx-act" type="button" data-gx-fav>♡ 收藏</button>
+              <button class="gx-act" type="button" data-gx-copy>复制链接</button>
+            </div>
+          </div>
+        </article>
+
+        <div class="gx-focus-side">
+          <article class="gx-side-item">
+            <h4>字体回退链为何救不了乱码</h4>
+            <p>font-family 命中失败只会出现方块或默认字形，而替换符与问号通常说明解码阶段已经出错。分清两类症状，排查时间可缩短一半。</p>
+            <div class="gx-meta-row"><span class="gx-tag gx-tag-amber">经验分享</span><span>作者：周允</span><span>播放 18.3 万</span></div>
+            <div class="gx-video-actions" style="margin-top:10px;">
+              <button class="gx-act" type="button" data-gx-like>👍 <span data-gx-like-num>4386</span></button>
+              <button class="gx-act" type="button" data-gx-fav>♡ 收藏</button>
+            </div>
+          </article>
+          <article class="gx-side-item">
+            <h4>从一张截图定位编码故障</h4>
+            <p>把乱码形态当作指纹：问号、方块、替换符、生僻字错位四类特征，分别指向不同的故障层级。</p>
+            <div class="gx-meta-row"><span class="gx-tag gx-tag-mint">知识科普</span><span>作者：苏黎</span><span>播放 11.6 万</span></div>
+            <div class="gx-video-actions" style="margin-top:10px;">
+              <button class="gx-act" type="button" data-gx-like>👍 <span data-gx-like-num>2741</span></button>
+              <button class="gx-act" type="button" data-gx-fav>♡ 收藏</button>
+            </div>
+          </article>
+          <article class="gx-side-item">
+            <h4>数据库迁移后的批量乱码复盘</h4>
+            <p>一次 latin1 到 utf8mb4 的迁移事故，导致 4.7 万条订单地址乱码，我们用 72 小时完成定位、回滚与修复。</p>
+            <div class="gx-meta-row"><span class="gx-tag gx-tag-rose">品牌故事</span><span>作者：顾行舟</span><span>播放 9.4 万</span></div>
+            <div class="gx-video-actions" style="margin-top:10px;">
+              <button class="gx-act" type="button" data-gx-like>👍 <span data-gx-like-num>1963</span></button>
+              <button class="gx-act" type="button" data-gx-fav>♡ 收藏</button>
+            </div>
+          </article>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- S3 视频内容入口 -->
+  <section class="gx-section" id="gx-videos" aria-labelledby="gx-videos-title">
+    <div class="gx-wrap">
+      <div class="gx-sec-head">
+        <span class="gx-sec-kicker">Videos · 视频精选</span>
+        <h2 id="gx-videos-title">高清视频：六条路线带你排查文字乱码</h2>
+        <p>按故障层级组织的视频条目，每条都配有可复现的操作步骤，适合创作者与企业团队直接用于内部分享。</p>
+      </div>
+
+      <div class="gx-video-list">
+        <article class="gx-video-item gx-with-thumb">
+          <div>
+            <h3>EP01｜乱码第一步：确认字节没有错，而不是先换字体</h3>
+            <p>从十六进制查看器入手，判断文件本身是否被错误转码；再用最小 HTML 复现，把问题锁定在「存储」「传输」「渲染」中的某一层。</p>
+            <div class="gx-meta-row">
+              <span class="gx-tag">教程干货</span><span class="gx-tag gx-tag-mint">入门必看</span>
+              <span>作者：林知远</span><span>播放 26.4 万</span><span>点赞 6,204</span><span>收藏 3,118</span>
+            </div>
+            <div class="gx-video-actions" style="margin-top:12px;">
+              <button class="gx-act" type="button" data-gx-like>👍 <span data-gx-like-num>6204</span></button>
+              <button class="gx-act" type="button" data-gx-fav>♡ 收藏</button>
+              <button class="gx-act" type="button" data-gx-copy>复制链接</button>
+            </div>
+          </div>
+          <div class="gx-cover-thumb">
+            <svg viewBox="0 0 320 180" role="img" aria-label="视频封面：十六进制字节查看器界面与高亮的中文字节序列">
+              <rect width="320" height="180" fill="#0c1b2b"/>
+              <rect x="16" y="18" width="288" height="144" rx="8" fill="#0a1523" stroke="#1d4661"/>
+              <text x="30" y="42" fill="#5d9bc0" font-size="10" font-family="monospace">hex viewer</text>
+              <g font-family="monospace" font-size="10" fill="#4f7f9c">
+                <text x="30" y="66">0000  E4 B9 B1 E7</text>
+                <text x="30" y="82">0004  A0 81 E7 A0</text>
+                <text x="30" y="98">0008  81 EF BF BD</text>
+                <text x="30" y="114">000C  3F 3F 3F 3F</text>
+              </g>
+              <rect x="88" y="56" width="92" height="12" rx="3" fill="#38bdf8" opacity="0.35"/>
+              <rect x="88" y="72" width="76" height="12" rx="3" fill="#34d399" opacity="0.3"/>
+              <text x="30" y="144" fill="#fbbf24" font-size="10">EF BF BD = U+FFFD 替换符</text>
+            </svg>
+          </div>
+        </article>
+
+        <article class="gx-video-item">
+          <div>
+            <h3>EP02｜meta 与 HTTP 头打架时，浏览器到底听谁的</h3>
+            <p>用抓包与 DevTools 双视角还原声明冲突，解释「字体正常但汉字全变成问号」的完整链路，并给出统一声明顺序。</p>
+            <div class="gx-meta-row">
+              <span class="gx-tag">行业观察</span><span>作者：周允</span><span>播放 15.7 万</span><span>点赞 3,882</span><span>收藏 1,904</span>
+            </div>
+            <div class="gx-video-actions" style="margin-top:12px;">
+              <button class="gx-act" type="button" data-gx-like>👍 <span data-gx-like-num>3882</span></button>
+              <button class="gx-act" type="button" data-gx-fav>♡ 收藏</button>
+              <button class="gx-act" type="button" data-gx-copy>复制链接</button>
+            </div>
+          </div>
+        </article>
+
+        <article class="gx-video-item">
+          <div>
+            <h3>EP03｜字体回退链实操：字体不缺，字形却画不出来</h3>
+            <p>演示 font-family 优先级、unicode-range 与本地字体缓存冲突导致的方块字现象，说明它与编码乱码的区分要点。</p>
+            <div class="gx-meta-row">
+              <span class="gx-tag">实用技巧</span><span class="gx-tag gx-tag-mint">动手实操</span><span>作者：苏黎</span><span>播放 12.9 万</span><span>点赞 3,147</span><span>收藏 1,562</span>
+            </div>
+            <div class="gx-video-actions" style="margin-top:12px;">
+              <button class="gx-act" type="button" data-gx-like>👍 <span data-gx-like-num>3147</span></button>
+              <button class="gx-act" type="button" data-gx-fav>♡ 收藏</button>
+              <button class="gx-act" type="button" data-gx-copy>复制链接</button>
+            </div>
+          </div>
+        </article>
+
+        <article class="gx-video-item">
+          <div>
+            <h3>EP04｜移动端乱码专题：WebView 与系统字体的双重变量</h3>
+            <p>同一页面在 iOS 与 Android 上呈现不同乱码形态，从 WebView 设置、系统语言到字体包，逐项对照排查。</p>
+            <div class="gx-meta-row">
+              <span class="gx-tag">深度测评</span><span>作者：顾行舟</span><span>播放 10.2 万</span><span>点赞 2,468</span><span>收藏 1,207</span>
+            </div>
+            <div class="gx-video-actions" style="margin-top:12px;">
+              <button class="gx-act" type="button" data-gx-like>👍 <span data-gx-like-num>2468</span></button>
+              <button class="gx-act" type="button" data-gx-fav>♡ 收藏</button>
+              <button class="gx-act" type="button" data-gx-copy>复制链接</button>
+            </div>
+          </div>
+        </article>
+
+        <article class="gx-video-item">
+          <div>
+            <h3>EP05｜导出与打印乱码：PDF、CSV 与 Excel 的隐藏字符集</h3>
+            <p>同一份数据在网页正常，导出后全成乱码？拆解导出环节的字符集继承规则与常见默认值陷阱，附修复清单。</p>
+            <div class="gx-meta-row">
+              <span class="gx-tag">经验分享</span><span>作者：周允</span><span>播放 8.6 万</span><span>点赞 2,013</span><span>收藏 986</span>
+            </div>
+            <div class="gx-video-actions" style="margin-top:12px;">
+              <button class="gx-act" type="button" data-gx-like>👍 <span data-gx-like-num>2013</span></button>
+              <button class="gx-act" type="button" data-gx-fav>♡ 收藏</button>
+              <button class="gx-act" type="button" data-gx-copy>复制链接</button>
+            </div>
+          </div>
+        </article>
+
+        <article class="gx-video-item">
+          <div>
+            <h3>EP06｜团队级乱码治理：把排查写进发布流程</h3>
+            <p>从工单模板、自动化检测到上线检查表，讲清企业如何把乱码风险前移，减少重复排障成本。</p>
+            <div class="gx-meta-row">
+              <span class="gx-tag gx-tag-amber">行业观察</span><span>作者：林知远</span><span>播放 7.8 万</span><span>点赞 1,842</span><span>收藏 921</span>
+            </div>
+            <div class="gx-video-actions" style="margin-top:12px;">
+              <button class="gx-act" type="button" data-gx-like>👍 <span data-gx-like-num>1842</span></button>
+              <button class="gx-act" type="button" data-gx-fav>♡ 收藏</button>
+              <button class="gx-act" type="button" data-gx-copy>复制链接</button>
+            </div>
+          </div>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- S4 专题企划 -->
+  <section class="gx-section" id="gx-topics" aria-labelledby="gx-topics-title">
+    <div class="gx-wrap">
+      <div class="gx-sec-head">
+        <span class="gx-sec-kicker">Series · 专题企划</span>
+        <h2 id="gx-topics-title">乱码问题专题企划：按场景组织的长期内容生态</h2>
+        <p>把零散技巧编成体系，每个专题都持续更新，面向创作者与企业团队开放共创。</p>
+      </div>
+
+      <div class="gx-topic-grid">
+        <article class="gx-topic-card">
+          <figure class="gx-topic-fig">
+            <svg viewBox="0 0 360 200" role="img" aria-label="专题配图：编码与字体三层排查结构示意">
+              <rect width="360" height="200" fill="#0d1b2b"/>
+              <rect x="28" y="30" width="304" height="40" rx="8" fill="#123045" stroke="#2b6c8e"/>
+              <text x="44" y="56" fill="#8fdcff" font-size="13">① 字节层：文件 / 库 / 接口</text>
+              <rect x="28" y="82" width="304" height="40" rx="8" fill="#102a3a" stroke="#2b6c8e"/>
+              <text x="44" y="108" fill="#8fdcff" font-size="13">② 解码层：声明 / 转换 / 兼容</text>
+              <rect x="28" y="134" width="304" height="40" rx="8" fill="#0f2430" stroke="#2b6c8e"/>
+              <text x="44" y="160" fill="#8fdcff" font-size="13">③ 渲染层：字体 / 回退 / 引擎</text>
+            </svg>
+          </figure>
+          <h3>三层定位法：乱码排障体系</h3>
+          <p>把乱码拆成字节、解码、渲染三层，先定性再定位，避免在字体层反复试错。</p>
+          <div class="gx-topic-status"><i></i>连载中 · 已更新 9 期</div>
+          <ul>
+            <li>如何在 3 分钟完成层级判定<span>附判定清单与常见误判</span></li>
+            <li>字符集声明冲突的 6 种组合<span>含复现代码与修复方案</span></li>
+            <li>字体回退链调试实录<span>方块字与替换符区分</span></li>
+          </ul>
+        </article>
+
+        <article class="gx-topic-card">
+          <h3>企业级乱码治理</h3>
+          <p>面向技术负责人与内容团队，围绕流程、规范与自动化检测，讲清如何降低重复排障成本。</p>
+          <div class="gx-topic-status"><i></i>连载中 · 已更新 6 期</div>
+          <ul>
+            <li>把编码检查写进 CI 的三种做法<span>企业实践摘录</span></li>
+            <li>多语言站点的字符集规范模板<span>可直接套用</span></li>
+            <li>迁移事故复盘：72 小时修复记录<span>含回滚策略</span></li>
+          </ul>
+        </article>
+
+        <article class="gx-topic-card">
+          <h3>创作者的踩坑日记</h3>
+          <p>来自社区创作者的亲身经历，记录那些「看起来是字体问题、其实不是」的真实案例。</p>
+          <div class="gx-topic-status"><i></i>征集中 · 已收录 14 篇</div>
+          <ul>
+            <li>我的博客为什么在旧浏览器乱码<span>一篇完整复盘</span></li>
+            <li>手写字幕导出后变成方块<span>工具链排查过程</span></li>
+            <li>公众号转载后文字错乱<span>编辑器兼容问题</span></li>
+          </ul>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- S5 创作者矩阵：双列简介 -->
+  <section class="gx-section" id="gx-authors" aria-labelledby="gx-authors-title">
+    <div class="gx-wrap">
+      <div class="gx-sec-head">
+        <span class="gx-sec-kicker">Creators · 创作者矩阵</span>
+        <h2 id="gx-authors-title">平台创作者：让乱码排查变成可传播的知识</h2>
+        <p>他们是工程师、内容运营与独立开发者，也是社区中最愿意分享真实案例的一群人。</p>
+      </div>
+
+      <div class="gx-author-grid">
+        <article class="gx-author-card">
+          <div class="gx-avatar" style="background:linear-gradient(135deg,#38bdf8,#0ea5e9);">林</div>
+          <div>
+            <h3>林知远</h3>
+            <div class="gx-author-field">擅长领域：编码基础 · 浏览器渲染</div>
+            <p>前大型内容平台前端架构师，长期维护字符集与字体渲染专题。习惯用最小可复现案例讲清问题，累计发布 128 期排查教程，是社区里被引用次数最多的作者之一。</p>
+            <div class="gx-author-nums"><span>作品 <b>128</b></span><span>粉丝 <b>9.6 万</b></span></div>
+            <div class="gx-video-actions" style="margin-top:12px;">
+              <button class="gx-act" type="button" data-gx-author="林知远|编码基础、浏览器渲染、最小复现方法论">查看档案</button>
+            </div>
+          </div>
+        </article>
+
+        <article class="gx-author-card">
+          <div class="gx-avatar" style="background:linear-gradient(135deg,#34d399,#059669);">周</div>
+          <div>
+            <h3>周允</h3>
+            <div class="gx-author-field">擅长领域：导出链路 · 数据迁移</div>
+            <p>企业数据工程师，处理过十余次跨库迁移事故。专注 PDF、CSV、Excel 等导出场景的字符集继承问题，主张「先在导出端校验，再谈修复」，内容实操性极强。</p>
+            <div class="gx-author-nums"><span>作品 <b>86</b></span><span>粉丝 <b>5.2 万</b></span></div>
+            <div class="gx-video-actions" style="margin-top:12px;">
+              <button class="gx-act" type="button" data-gx-author="周允|导出链路、数据迁移、字符集继承规则">查看档案</button>
+            </div>
+          </div>
+        </article>
+
+        <article class="gx-author-card">
+          <div class="gx-avatar" style="background:linear-gradient(135deg,#fbbf24,#d97706);">苏</div>
+          <div>
+            <h3>苏黎</h3>
+            <div class="gx-author-field">擅长领域：字体回退 · 移动端适配</div>
+            <p>独立开发者，专注跨端字体表现差异。擅长用截图指纹判断故障层级，把复杂问题讲成可视化流程，作品多为短小精悍的实操短片，适合入门者快速建立判断力。</p>
+            <div class="gx-author-nums"><span>作品 <b>73</b></span><span>粉丝 <b>4.1 万</b></span></div>
+            <div class="gx-video-actions" style="margin-top:12px;">
+              <button class="gx-act" type="button" data-gx-author="苏黎|字体回退、移动端适配、截图指纹判别">查看档案</button>
+            </div>
+          </div>
+        </article>
+
+        <article class="gx-author-card">
+          <div class="gx-avatar" style="background:linear-gradient(135deg,#fb7185,#e11d48);">顾</div>
+          <div>
+            <h3>顾行舟</h3>
+            <div class="gx-author-field">擅长领域：事故复盘 · 团队治理</div>
+            <p>技术运营负责人，习惯把排障过程写成可复用的团队规范。她的内容偏重组织与流程，擅长用真实事故讲清「为什么同样的乱码问题会反复出现」。</p>
+            <div class="gx-author-nums"><span>作品 <b>64</b></span><span>粉丝 <b>3.7 万</b></span></div>
+            <div class="gx-video-actions" style="margin-top:12px;">
+              <button class="gx-act" type="button" data-gx-author="顾行舟|事故复盘、团队治理、发布流程规范化">查看档案</button>
+            </div>
+          </div>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- S6 评分摘要 + 双列短评 -->
+  <section class="gx-section" id="gx-reviews" aria-labelledby="gx-reviews-title">
+    <div class="gx-wrap">
+      <div class="gx-sec-head">
+        <span class="gx-sec-kicker">Voice · 口碑评分</span>
+        <h2 id="gx-reviews-title">用户评价：来自社区与企业的真实反馈</h2>
+        <p>口碑来自可验证的结果。以下评价均来自公开投稿或授权引用，覆盖个人与企业两类使用场景。</p>
+      </div>
+
+      <div class="gx-review-layout">
+        <aside class="gx-score-box" aria-label="综合评分摘要">
+          <div class="gx-score-num">4.8</div>
+          <div class="gx-score-sub">综合评分 · 基于 3,726 条有效评价</div>
+          <div class="gx-stars" aria-hidden="true">★★★★★</div>
+          <div class="gx-score-bars">
+            <div><span>定位准</span><span class="gx-bar"><i style="width:96%"></i></span></div>
+            <div><span>可复现</span><span class="gx-bar"><i style="width:93%"></i></span></div>
+            <div><span>易上手</span><span class="gx-bar"><i style="width:89%"></i></span></div>
+            <div><span>更新快</span><span class="gx-bar"><i style="width:91%"></i></span></div>
+            <div><span>专业度</span><span class="gx-bar"><i style="width:95%"></i></span></div>
+          </div>
+        </aside>
+
+        <div class="gx-review-grid">
+          <article class="gx-review-card gx-review-quote">
+            <p>「字体装了三套还是乱码，看完第一集才发现是 meta 声明和响应头不一致。按清单十五分钟定位，比我们之前折腾一天强太多。」</p>
+            <footer><b>许工 · 企业前端</b><span>2026-11-08</span></footer>
+          </article>
+          <article class="gx-review-card">
+            <p>专题结构很清晰，三层定位法直接抄进团队文档了。唯一希望多来点导出场景的案例。</p>
+            <footer><b>阿岚 · 内容运营</b><span>2026-11-05</span></footer>
+          </article>
+          <article class="gx-review-card">
+            <p>视频不长但信息密度高，方块字和替换符的区分帮我少走了很多弯路。评论区也很好问问题。</p>
+            <footer><b>小满 · 独立开发者</b><span>2026-11-02</span></footer>
+          </article>
+          <article class="gx-review-card gx-review-quote">
+            <p>「我们一次性迁移了四十多万条数据，是照你们的回滚策略做的预案。虽然最后没用上，但心里踏实。」</p>
+            <footer><b>陈经理 · 电商平台</b><span>2026-10-29</span></footer>
+          </article>
+          <article class="gx-review-card">
+            <p>希望增加繁体与日文的对照案例，目前中文场景覆盖已经很完整了。</p>
+            <footer><b>Momo · 翻译从业者</b><span>2026-10-26</span></footer>
+          </article>
+          <article class="gx-review-card">
+            <p>企业动态更新很勤，每周都能看到新增条目。对长期做运维的人来说，这种持续运营感很重要。</p>
+            <footer><b>老韩 · 运维工程师</b><span>2026-10-22</span></footer>
+          </article>
+          <article class="gx-review-card">
+            <p>评分给到 4.8 略低于我预期，扣分主要是有些案例太偏前端，后端同学希望多一点服务端内容。</p>
+            <footer><b>季川 · 后端开发</b><span>2026-10-18</span></footer>
+          </article>
+          <article class="gx-review-card">
+            <p>投稿流程顺畅，两天就收到了编辑的复核意见，还帮忙补充了截图说明，社区氛围不错。</p>
+            <footer><b>南栀 · 创作者</b><span>2026-10-12</span></footer>
+          </article>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 长文：关键词解析 ≥800 字 -->
+  <section class="gx-section" id="gx-article" aria-labelledby="gx-article-title">
+    <div class="gx-wrap">
+      <div class="gx-sec-head">
+        <span class="gx-sec-kicker">Deep Dive · 关键词解析</span>
+        <h2 id="gx-article-title">「不缺少字体但是文字乱码怎么办」深度解析</h2>
+        <p>这是本站被搜索最多的一个问题。下面用四个层次把它讲透，并给出可直接执行的排查顺序。</p>
+      </div>
+
+      <article class="gx-article">
+        <h3>一、先厘清一个前提：字体负责「画」，编码负责「读」</h3>
+        <p>「不缺少字体但是文字乱码怎么办」这个问题的关键在于把两件不同的事情分开。字体（font）决定的是字符有没有对应的字形，也就是这个字「长什么样」；而编码（encoding）决定的是字节序列该被翻译成哪个字符，也就是这段内容「说了什么」。当文字呈现为问号、替换符（U+FFFD）、「锟斤拷」这类错字组合时，问题几乎一定出在解码环节，而不是字体缺失。只有当你看到整齐的方块（tofu）或某些生僻字单独不显示、其余中文正常时，才更可能是字体覆盖范围不足或字体回退链断裂。很多团队的排障时间浪费在反复安装和替换字体上，就是因为没有先做这个定性判断。正确的顺序是：先看乱码形态，再确认字节内容，最后才检查字体与渲染。</p>
+        <div class="gx-note">快速判断口诀：问号与替换符看编码，方块与缺字看字体，整体错位看声明，部分字形缺失看回退链。</div>
+
+        <h3>二、乱码的四个常见层级与对应症状</h3>
+        <p><strong>第一层是存储层。</strong>文件本身被错误转码，比如原本是 UTF-8 的文本被某个编辑器以 GBK 打开后保存，字节已经被改写。这时无论前端怎么声明都无法还原，必须回到原始文件或用备份恢复。典型症状是打开任意工具都乱码，且乱码内容从头到尾一致。<strong>第二层是传输层。</strong>服务端响应头与页面内声明不一致，例如响应头写 GBK、页面 meta 写 UTF-8，浏览器可能优先采用响应头，于是中文错乱。这类问题在本地预览时常常看不出来，一旦部署就出现，是最容易被误判为「字体问题」的一类。<strong>第三层是解码层。</strong>接口返回的 JSON 被以错误字符集解析，或数据库连接串未指定字符集，导致取出的字符串从源头就错了。典型症状是部分字段乱码、部分正常，且与数据来源强相关。<strong>第四层是渲染层。</strong>字节与解码都正确，但字体回退链没有命中，导致显示方块或默认字形。这一层才是真正的「字体问题」，也是题目中「不缺少字体」想要排除的情况。把问题放进这四个层级，排查范围就能迅速收窄。</p>
+
+        <h3>三、可执行的排查顺序：从最小复现到逐项排除</h3>
+        <p>建议按以下顺序执行，每一步都要留下结论，避免来回跳步。第一步，用十六进制查看器确认文件头部与中文字节，如果是合法的 UTF-8 三字节序列（例如“乱”为 E4 B9 B1），说明存储层大概率没问题；若看到 EF BF BD，说明内容在某个环节已被替换为替换符，已经不可逆。第二步，制作一个最小 HTML 页面，只包含一段中文与明确的 meta 声明，分别在浏览器与抓包工具中查看响应头，确认两者一致。第三步，检查所有中间环节：编辑器保存编码、构建工具转码、CDN 或网关的字符集改写、接口返回头。第四步，若以上都正确，再检查 CSS 中的 font-family、unicode-range 与字体文件是否真正加载成功，用开发者工具查看字体面板的实际命中情况。第五步，针对导出场景单独验证，因为 PDF、CSV、Excel 的字符集继承规则各不相同，需要在导出函数处显式指定。整个过程配合清单记录，能显著降低重复排障的概率。</p>
+
+        <h3>四、把它变成团队能力：规范、检测与复盘</h3>
+        <p>单次修复只能解决一个问题，长期稳定需要把排查沉淀为流程。建议在项目层面固定三件事：统一声明规范（文件编码、页面声明、响应头三者一致，且写入开发约定）、上线前自动化检测（扫描页面与接口的字符集声明一致性，检测响应内容中是否含替换符）、事故复盘模板（记录乱码形态、层级判定、根因与修复动作）。对于企业站点，还可以在发布流程里加入多语言样本页的回归校验，覆盖简体、繁体与常见符号。社区层面，我们鼓励创作者把真实工单投稿到本站，经复核后进入公共样本库，让「不缺少字体但是文字乱码怎么办」这样的高频问题逐步拥有一套被验证过的标准答案。这也是我们作为内容平台持续运营、追求品质与口碑的方式。</p>
+      </article>
+    </div>
+  </section>
+
+  <!-- S7 企业动态（时间线） -->
+  <section class="gx-section" id="gx-news" aria-labelledby="gx-news-title">
+    <div class="gx-wrap">
+      <div class="gx-sec-head">
+        <span class="gx-sec-kicker">News · 企业动态</span>
+        <h2 id="gx-news-title">企业动态与官方发布：持续更新的内容生态</h2>
+        <p>平台的产品迭代、内容更新与社区活动，均在此同步。</p>
+      </div>
+      <ul class="gx-timeline">
+        <li>
+          <time datetime="2026-11-22">2026-11-22</time>
+          <h4>乱码诊断工具箱 v3.2 上线</h4>
+          <p>新增 GBK 与 BIG5 双向检测、渲染链自检报告导出，支持团队批量导入样本进行一致性比对。</p>
+        </li>
+        <li>
+          <time datetime="2026-11-15">2026-11-15</time>
+          <h4>第 12 期「编码排查实战营」开放报名</h4>
+          <p>面向企业与创作者共 200 个名额，课程围绕真实工单展开，含导出场景与移动端专项。</p>
+        </li>
+        <li>
+          <time datetime="2026-11-06">2026-11-06</time>
+          <h4>公共故障样本库突破 1,200 条</h4>
+          <p>全部样本经过双人复核并附最小复现说明，社区可直接引用与下载，用于内部培训。</p>
+        </li>
+        <li>
+          <time datetime="2026-10-28">2026-10-28</time>
+          <h4>与三家内容平台达成内容共建合作</h4>
+          <p>共同建立多语言字符集检查规范，并将排查清单纳入其创作者发布流程。</p>
+        </li>
+        <li>
+          <time datetime="2026-10-17">2026-10-17</time>
+          <h4>官方网站完成无障碍与阅读体验优化</h4>
+          <p>正文对比度、键盘导航与朗读结构同步升级，长文阅读更顺畅。</p>
+        </li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- S7 合作品牌 + FAQ -->
+  <section class="gx-section" id="gx-faq" aria-labelledby="gx-faq-title">
+    <div class="gx-wrap">
+      <div class="gx-sec-head">
+        <span class="gx-sec-kicker">Support · 帮助与伙伴</span>
+        <h2 id="gx-faq-title">常见问题与合作品牌：乱码排查的最后一公里</h2>
+        <p>关于不缺少字体但是文字乱码怎么办，这里汇总了社区最常问的八个问题；下方为共建伙伴。</p>
+      </div>
+
+      <div class="gx-faq">
+        <details>
+          <summary>字体都装了，为什么中文还是显示成问号？</summary>
+          <p>问号通常说明解码阶段失败，而不是字体缺失。请优先检查页面 meta 声明、HTTP 响应头与文件实际编码是否一致，并确认接口返回内容的字符集声明。</p>
+        </details>
+        <details>
+          <summary>显示方块和显示问号有什么区别？</summary>
+          <p>方块（tofu）多数是字体覆盖不到对应字符或回退链断裂；问号、替换符则更可能是编码错误。两者的排查方向不同，建议先用最小复现页面区分。</p>
+        </details>
+        <details>
+          <summary>本地正常，部署后乱码，最可能是什么原因？</summary>
+          <p>最常见的是服务端响应头与页面声明不一致，其次是构建或压缩环节改写了字符集，也可能是网关、CDN 对响应内容做了转码处理。</p>
+        </details>
+        <details>
+          <summary>数据库里已经是乱码，还能恢复吗？</summary>
+          <p>取决于错误是否可逆。如果只是显示层声明错误，修正连接字符集即可恢复；如果内容已在存储时被替换为替换符，通常无法还原，只能依赖备份。</p>
+        </details>
+        <details>
+          <summary>导出 PDF 或 CSV 后乱码，应该查哪里？</summary>
+          <p>优先检查导出函数是否显式指定字符集，其次确认模板文件本身的编码。CSV 还需注意是否添加 BOM，部分办公软件会根据 BOM 判断编码。</p>
+        </details>
+        <details>
+          <summary>移动端 WebView 乱码与浏览器表现不同，怎么办？</summary>
+          <p>检查 WebView 初始化时的字符集设置、系统语言与字体包差异。建议在真机上用同一段样本内容做对照测试，固定变量后再比较。</p>
+        </details>
+        <details>
+          <summary>如何投稿自己的乱码案例？</summary>
+          <p>可点击页面中的「投稿」按钮提交描述与截图，编辑会在两个工作日内回复，复核通过后会纳入公共样本库并注明来源。</p>
+        </details>
+        <details>
+          <summary>企业能否申请内部培训和排查清单？</summary>
+          <p>可以。我们提供面向团队的结构化课程与可编辑检查表，覆盖 Web、移动端、导出与迁移四类场景，可通过页面底部联系方式咨询。</p>
+        </details>
+      </div>
+
+      <div class="gx-partner-grid" style="margin-top:30px;" aria-label="合作品牌">
+        <div class="gx-partner"><b>文澜云</b>内容平台</div>
+        <div class="gx-partner"><b>字匣</b>字体服务</div>
+        <div class="gx-partner"><b>数桥</b>数据工具</div>
+        <div class="gx-partner"><b>青栈</b>开发者社区</div>
+        <div class="gx-partner"><b>页岩</b>建站服务</div>
+      </div>
+
+      <div class="gx-contact-grid">
+        <div class="gx-contact-card">
+          <h3>投稿与合作</h3>
+          <p>欢迎提交真实乱码案例、工具测评与排查经验。企业合作请注明团队规模与场景，我们会安排对应方向的编辑对接。</p>
+          <div class="gx-video-actions" style="margin-top:12px;">
+            <button class="gx-act" type="button" data-gx-open="submit">前往投稿</button>
+            <button class="gx-act" type="button" data-gx-copy>复制本页链接</button>
+          </div>
+        </div>
+        <div class="gx-contact-card">
+          <h3>更新与订阅</h3>
+          <p>每周三更新视频精选，每月发布一次故障样本月报。可通过站内订阅入口获取最新精品内容与活动报名提醒。</p>
+          <div class="gx-video-actions" style="margin-top:12px;">
+            <button class="gx-act" type="button" data-gx-toast="已记录订阅意向，最新内容发布时将同步提醒。">订阅更新</button>
+            <a class="gx-act" href="#gx-news">查看更新日志</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<!-- S8 页脚 -->
+<footer class="gx-footer">
+  <div class="gx-wrap">
+    <div class="gx-footer-cols">
+      <div>
+        <h4>乱码修复实验室 · 官方网站</h4>
+        <p>专注文本渲染故障诊断的原创内容平台，深耕编码与字体垂直领域，为企业与创作者提供值得信赖的排查方案与精品内容。</p>
+      </div>
+      <div>
+        <h4>内容板块</h4>
+        <ul>
+          <li><a href="#gx-focus">焦点内容</a></li>
+          <li><a href="#gx-videos">视频精选</a></li>
+          <li><a href="#gx-topics">专题企划</a></li>
+          <li><a href="#gx-article">关键词解析</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>社区与帮助</h4>
+        <ul>
+          <li><a href="#gx-authors">创作者矩阵</a></li>
+          <li><a href="#gx-reviews">口碑评分</a></li>
+          <li><a href="#gx-faq">常见问题</a></li>
+          <li><a href="#gx-news">企业动态</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>品牌信息</h4>
+        <ul>
+          <li>持续运营 · 内容更新中</li>
+          <li>用户至上 · 品质优先</li>
+          <li>投稿与合作：请使用站内入口</li>
+          <li>服务时间：周一至周五 10:00–19:00</li>
+        </ul>
+      </div>
+    </div>
+    <div class="gx-footer-bottom">
+      <span>© 2026 乱码修复实验室 版权所有 · 官方网站持续运营中</span>
+      <span>内容均为原创或经授权转载 · 仅供排查参考</span>
+    </div>
+  </div>
+</footer>
+
+<button class="gx-top-btn" id="gx-top-btn" type="button" aria-label="回到顶部">↑</button>
+
+<!-- 投稿弹窗 -->
+<div class="gx-modal-mask" id="gx-modal-submit" role="dialog" aria-modal="true" aria-labelledby="gx-modal-submit-title">
+  <div class="gx-modal">
+    <button class="gx-modal-close" type="button" data-gx-close aria-label="关闭">×</button>
+    <h3 id="gx-modal-submit-title">投稿你的乱码案例</h3>
+    <p>描述越具体，复核越快。请尽量附上乱码形态、出现场景与已尝试的处理方式。</p>
+    <form id="gx-submit-form">
+      <label for="gx-submit-name">称呼</label>
+      <input id="gx-submit-name" type="text" placeholder="如何称呼你" required>
+      <label for="gx-submit-scene">场景类型</label>
+      <select id="gx-submit-scene">
+        <option>网页显示乱码</option>
+        <option>移动端 WebView 乱码</option>
+        <option>导出 PDF / CSV 乱码</option>
+        <option>数据库迁移乱码</option>
+        <option>其他</option>
+      </select>
+      <label for="gx-submit-desc">问题描述</label>
+      <textarea id="gx-submit-desc" placeholder="例如：字体已安装但中文显示为问号，页面 meta 为 UTF-8，响应头为 GBK…" required></textarea>
+      <div class="gx-modal-actions">
+        <button class="gx-btn gx-btn-ghost" type="button" data-gx-close>取消</button>
+        <button class="gx-btn gx-btn-primary" type="submit">提交投稿</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- 作者档案弹窗 -->
+<div class="gx-modal-mask" id="gx-modal-author" role="dialog" aria-modal="true" aria-labelledby="gx-modal-author-title">
+  <div class="gx-modal">
+    <button class="gx-modal-close" type="button" data-gx-close aria-label="关闭">×</button>
+    <h3 id="gx-modal-author-title">创作者档案</h3>
+    <p id="gx-modal-author-body"></p>
+    <div class="gx-modal-actions">
+      <button class="gx-btn gx-btn-ghost" type="button" data-gx-close>关闭</button>
+    </div>
+  </div>
+</div>
+
+<!-- 分享弹窗 -->
+<div class="gx-modal-mask" id="gx-modal-share" role="dialog" aria-modal="true" aria-labelledby="gx-modal-share-title">
+  <div class="gx-modal">
+    <button class="gx-modal-close" type="button" data-gx-close aria-label="关闭">×</button>
+    <h3 id="gx-modal-share-title">分享这篇内容</h3>
+    <p>选择分享方式，或直接复制页面链接发送给同事。</p>
+    <div class="gx-modal-actions" style="justify-content:flex-start;">
+      <button class="gx-act" type="button" data-gx-toast="分享文案已准备，可粘贴至微信发送。">微信</button>
+      <button class="gx-act" type="button" data-gx-toast="分享文案已准备，可粘贴至微博发布。">微博</button>
+      <button class="gx-act" type="button" data-gx-toast="分享文案已准备，可粘贴至 QQ 发送。">QQ</button>
+      <button class="gx-act" type="button" data-gx-copy>复制链接</button>
+    </div>
+  </div>
+</div>
+
+<div class="gx-toast" id="gx-toast" role="status" aria-live="polite"></div>
+
+<script>
+(function(){
+  "use strict";
+
+  var toastEl = document.getElementById("gx-toast");
+  var toastTimer = null;
+  function toast(msg){
+    if(!toastEl) return;
+    toastEl.textContent = msg;
+    toastEl.classList.add("gx-show");
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function(){ toastEl.classList.remove("gx-show"); }, 2200);
+  }
+
+  /* 移动端导航折叠 */
+  var navToggle = document.getElementById("gx-nav-toggle");
+  var nav = document.getElementById("gx-nav");
+  if(navToggle && nav){
+    navToggle.addEventListener("click", function(){
+      var open = nav.classList.toggle("gx-open");
+      navToggle.setAttribute("aria-expanded", open ? "true" : "false");
+      navToggle.textContent = open ? "收起" : "菜单";
+    });
+    nav.addEventListener("click", function(e){
+      if(e.target.tagName === "A"){
+        nav.classList.remove("gx-open");
+        navToggle.setAttribute("aria-expanded","false");
+        navToggle.textContent = "菜单";
+      }
+    });
+  }
+
+  /* 搜索前端反馈 */
+  var searchInput = document.getElementById("gx-search-input");
+  var searchBtn = document.getElementById("gx-search-btn");
+  var searchHint = document.getElementById("gx-search-hint");
+  var searchIndex = [
+    {k:"utf-8", t:"编码基础：meta 与响应头一致性检查", href:"#gx-article"},
+    {k:"乱码", t:"乱码诊断工具箱与三层定位法", href:"#gx-topics"},
+    {k:"字体", t:"字体回退链调试与方块字区分", href:"#gx-videos"},
+    {k:"gbk", t:"GBK 与 BIG5 双向检测说明", href:"#gx-news"},
+    {k:"导出", t:"PDF / CSV / Excel 导出乱码专题", href:"#gx-topics"},
+    {k:"数据库", t:"数据库迁移乱码复盘", href:"#gx-reviews"}
+  ];
+  function runSearch(){
+    if(!searchInput || !searchHint) return;
+    var q = searchInput.value.trim();
+    if(!q){
+      searchHint.innerHTML = "输入关键词，例如「UTF-8」「字体」「导出」进行站内查找。";
+      searchHint.classList.add("gx-show");
+      return;
+    }
+    var lower = q.toLowerCase();
+    var hits = searchIndex.filter(function(it){
+      return it.k.indexOf(lower) > -1 || it.t.indexOf(q) > -1;
+    });
+    if(hits.length === 0){
+      searchHint.innerHTML = "未找到与「" + escapeHtml(q) + "」直接匹配的条目，建议前往<a href='#gx-article'>关键词解析</a>或<a href='#gx-faq'>常见问题</a>查看。";
+    }else{
+      searchHint.innerHTML = "找到 " + hits.length + " 条相关结果：" + hits.map(function(it){
+        return "<a href='" + it.href + "'>" + escapeHtml(it.t) + "</a>";
+      }).join(" · ");
+    }
+    searchHint.classList.add("gx-show");
+  }
+  function escapeHtml(s){
+    return String(s).replace(/[&<>"']/g, function(c){
+      return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];
+    });
+  }
+  if(searchBtn){ searchBtn.addEventListener("click", runSearch); }
+  if(searchInput){
+    searchInput.addEventListener("keydown", function(e){
+      if(e.key === "Enter"){ e.preventDefault(); runSearch(); }
+    });
+    searchInput.addEventListener("focus", runSearch);
+    document.addEventListener("click", function(e){
+      if(searchHint && !searchHint.contains(e.target) && e.target !== searchInput && e.target !== searchBtn){
+        searchHint.classList.remove("gx-show");
+      }
+    });
+  }
+
+  /* 点赞 / 收藏 */
+  document.addEventListener("click", function(e){
+    var likeBtn = e.target.closest("[data-gx-like]");
+    if(likeBtn){
+      var numEl = likeBtn.querySelector("[data-gx-like-num]");
+      if(numEl){
+        var n = parseInt(numEl.textContent.replace(/[^\d]/g,""),10) || 0;
+        var on = likeBtn.classList.toggle("gx-act-on");
+        numEl.textContent = String(on ? n + 1 : n - 1);
+        toast(on ? "已点赞，感谢支持" : "已取消点赞");
+      }
+      return;
+    }
+    var favBtn = e.target.closest("[data-gx-fav]");
+    if(favBtn){
+      var onFav = favBtn.classList.toggle("gx-act-on");
+      favBtn.textContent = onFav ? "♥ 已收藏" : "♡ 收藏";
+      toast(onFav ? "已加入收藏，可在个人中心查看" : "已取消收藏");
+      return;
+    }
+    var copyBtn = e.target.closest("[data-gx-copy]");
+    if(copyBtn){
+      copyPageLink();
+      return;
+    }
+    var toastBtn = e.target.closest("[data-gx-toast]");
+    if(toastBtn){
+      toast(toastBtn.getAttribute("data-gx-toast"));
+      return;
+    }
+    var authorBtn = e.target.closest("[data-gx-author]");
+    if(authorBtn){
+      openAuthor(authorBtn.getAttribute("data-gx-author"));
+      return;
+    }
+    var openBtn = e.target.closest("[data-gx-open]");
+    if(openBtn){
+      var id = openBtn.getAttribute("data-gx-open");
+      if(id === "submit"){ openModal("gx-modal-submit"); }
+      return;
+    }
+    if(e.target.closest("[data-gx-close]")){
+      closeAllModals();
+    }
+  });
+
+  function copyPageLink(){
+    var url = window.location.href.split("#")[0];
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(url).then(function(){
+        toast("链接已复制到剪贴板");
+      }).catch(function(){
+        toast("复制失败，请手动选择地址栏复制");
+      });
+    }else{
+      toast("当前环境不支持自动复制，请手动选择地址栏复制");
+    }
+  }
+
+  /* 弹窗 */
+  function openModal(id){
+    var m = document.getElementById(id);
+    if(!m) return;
+    m.classList.add("gx-show");
+    document.body.style.overflow = "hidden";
+  }
+  function closeAllModals(){
+    document.querySelectorAll(".gx-modal-mask.gx-show").forEach(function(m){
+      m.classList.remove("gx-show");
+    });
+    document.body.style.overflow = "";
+  }
+  document.querySelectorAll(".gx-modal-mask").forEach(function(mask){
+    mask.addEventListener("click", function(e){
+      if(e.target === mask){ closeAllModals(); }
+    });
+  });
+  document.addEventListener("keydown", function(e){
+    if(e.key === "Escape"){ closeAllModals(); }
+  });
+
+  function openAuthor(raw){
+    var parts = String(raw || "").split("|");
+    var name = parts[0] || "创作者";
+    var field = parts[1] || "乱码排查";
+    var title = document.getElementById("gx-modal-author-title");
+    var body = document.getElementById("gx-modal-author-body");
+    if(title){ title.textContent = name + " · 创作者档案"; }
+    if(body){
+      body.textContent = "擅长领域：" + field + "。该创作者长期在本平台发布原创排查内容，作品均经过编辑复核，欢迎在对应视频或专题下留言交流，也可通过投稿入口与其取得联系。";
+    }
+    openModal("gx-modal-author");
+  }
+
+  /* 投稿表单 */
+  var submitForm = document.getElementById("gx-submit-form");
+  if(submitForm){
+    submitForm.addEventListener("submit", function(e){
+      e.preventDefault();
+      var nameInput = document.getElementById("gx-submit-name");
+      var descInput = document.getElementById("gx-submit-desc");
+      if(!nameInput.value.trim() || !descInput.value.trim()){
+        toast("请填写称呼与问题描述后再提交");
+        return;
+      }
+      closeAllModals();
+      submitForm.reset();
+      toast("投稿已提交，编辑将在两个工作日内回复");
+    });
+  }
+
+  /* 回到顶部 */
+  var topBtn = document.getElementById("gx-top-btn");
+  window.addEventListener("scroll", function(){
+    if(!topBtn) return;
+    if(window.scrollY > 560){ topBtn.classList.add("gx-show"); }
+    else{ topBtn.classList.remove("gx-show"); }
+  }, {passive:true});
+  if(topBtn){
+    topBtn.addEventListener("click", function(){
+      window.scrollTo({top:0, behavior:"smooth"});
+    });
+  }
+
+  /* 数字滚动（首屏数据） */
+  var statNums = document.querySelectorAll(".gx-stat b");
+  var statDone = false;
+  function animateStats(){
+    if(statDone) return;
+    var trigger = document.querySelector(".gx-stats");
+    if(!trigger) return;
+    var rect = trigger.getBoundingClientRect();
+    if(rect.top < window.innerHeight - 60){
+      statDone = true;
+      statNums.forEach(function(el){
+        var text = el.textContent;
+        var m = text.match(/([\d.]+)/);
+        if(!m) return;
+        var target = parseFloat(m[1]);
+        var suffix = text.replace(m[1], "");
+        var decimals = (m[1].split(".")[1] || "").length;
+        var start = 0, dur = 900, t0 = null;
+        function step(ts){
+          if(!t0) t0 = ts;
+          var p = Math.min((ts - t0) / dur, 1);
+          var eased = 1 - Math.pow(1 - p, 3);
+          var val = target * eased;
+          el.textContent = (decimals ? val.toFixed(decimals) : Math.round(val)) + suffix;
+          if(p < 1){ requestAnimationFrame(step); }
+          else{ el.textContent = text; }
+        }
+        requestAnimationFrame(step);
+      });
+    }
+  }
+  window.addEventListener("scroll", animateStats, {passive:true});
+  animateStats();
+})();
+</script>
+</body>
+  </html>
